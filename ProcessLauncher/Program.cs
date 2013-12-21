@@ -20,7 +20,7 @@ namespace ProcessLauncher
             if (args.Length <= 0)
             {
                 exeName = "MemoryHog.exe";
-                exeParams = "6000 2000";
+                exeParams = "1 200 1000";  //allocate 1 Meg at a time, up till 200 Megs, pausing 1000 milliseconds between allocations
             }
             Process process = Process.Start(exeName, exeParams);
             Console.WriteLine("Press Enter To End Job.");

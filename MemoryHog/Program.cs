@@ -20,31 +20,63 @@ namespace MemoryHog
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("    Total Memory To Eat Up in Megs: " + args[0]);
-            Console.WriteLine("Millisecs Pause Between Increments: " + args[1]);            
-            int memoryTotalInMegaBytes     = Convert.ToInt32(args[0]);
-            int secondsToPause             = Convert.ToInt32(args[1]);
-
-            Console.WriteLine("Memory Usage:" + Convert.ToString(GC.GetTotalMemory(false)));
+            Parameters parms = new Parameters();
+            ParseCommandLine(args, out parms);
+            WriteCommandLine(parms);
+            WriteMemoryUsage();
 
             long runningTotal = GC.GetTotalMemory(false);
-            long endingMemoryLimit = Convert.ToInt64(memoryTotalInMegaBytes) * 1000 * 1000;
+            long endingMemoryLimit = Convert.ToInt64(parms.TotalAllocatedMemoryInMegs) * 1000 * 1000;
             List<XmlNode> memList = new List<XmlNode>();
+
+            //15,000 XmlNode Objects is about 1 megs 
+            int numObjects = 15000 * Convert.ToInt32(parms.IterationAllocatedMemoryInMegs);
             while (runningTotal <= endingMemoryLimit)
             {
                 XmlDocument doc = new XmlDocument();
-                for (int i=0; i < 1000000; i++)
+                for (int i = 0; i < numObjects; i++)
                 {
                     XmlNode x = doc.CreateNode(XmlNodeType.Element, "hello", "");
                     memList.Add(x);
                 }
                 runningTotal = GC.GetTotalMemory(false);
-                Console.WriteLine("Memory Usage:" + Convert.ToString(GC.GetTotalMemory(false)));
-                Thread.Sleep(secondsToPause);
+                WriteMemoryUsage();
+                Thread.Sleep(Convert.ToInt32(parms.IterationDelayInMilliseconds));
             }
             Console.ReadLine();
             
         }
 
+        static private void ParseCommandLine(string [] args, out Parameters parms)
+        {
+            parms = new Parameters();
+            parms.IterationAllocatedMemoryInMegs = "0";
+            parms.TotalAllocatedMemoryInMegs = "0";
+            parms.IterationDelayInMilliseconds = "0";
+            if (args.Length >= 1) parms.IterationAllocatedMemoryInMegs = args[0];
+            if (args.Length >= 2) parms.TotalAllocatedMemoryInMegs     = args[1];
+            if (args.Length >= 3) parms.IterationDelayInMilliseconds   = args[2];
+        }
+
+        static private void WriteCommandLine(Parameters parms)
+        {
+            Console.WriteLine("Iteration Memory To Eat Up in Megs: " + parms.IterationAllocatedMemoryInMegs);
+            Console.WriteLine("    Total Memory To Eat Up in Megs: " + parms.TotalAllocatedMemoryInMegs);
+            Console.WriteLine("Millisecs Pause Between Increments: " + parms.TotalAllocatedMemoryInMegs);            
+
+        }
+
+        static private void WriteMemoryUsage()
+        {
+            Console.WriteLine("Memory Usage:" + Convert.ToString(GC.GetTotalMemory(false)));
+        }
+    }
+
+    public class Parameters
+    {
+        public Parameters() { }
+        public string TotalAllocatedMemoryInMegs{ get; set;}
+        public string IterationAllocatedMemoryInMegs{get; set;}
+        public string IterationDelayInMilliseconds{get; set;}
     }
 }
